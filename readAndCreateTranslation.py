@@ -209,10 +209,7 @@ for itemLine in superFileH:
         hContentStr = hContentStr + resultInsertContentStr_H;
         hContentStr = hContentStr + itemLine;
     else:
-        tempPos = itemLine.find('/** 原文:');
-        tempPos2 = itemLine.find('@property (nonatomic, strong, readonly) NSString *');
-        if(tempPos == 0) or (tempPos2 == 0) :
-            hContentStr = hContentStr + itemLine;
+        hContentStr = hContentStr + itemLine;
 
 for itemLine in superFileM:
     if (itemLine.find('@end') >= 0):
