@@ -44,6 +44,7 @@ def createTranslationClass4hFile(className, superClassName, desStr) :
         contentStr = contentStr + '#define _TFTranslationsImplement(v, hc) - (NSString *)v { if (self.hard_code || !self.map[@#v]) { return hc; } return self.map[@#v]; }\n';
     contentStr = contentStr + '@interface '+ className +' : '+ superClassName +'\n';
     if (cmp(superClassName, 'NSObject') == 0) :
+        contentStr = contentStr + '/**\n更新翻译文本内容。\n@param contents 完整的翻译文件内容(如项目中的 CKLocalizable 文件内容)\n*/\n- (BOOL)update:(NSString *)contents;\n';
         contentStr = contentStr + '@property (nonatomic, strong) NSDictionary<NSString *, NSString *> *map;\n';
         contentStr = contentStr + '/** 是否使用硬编码代码 */\n';
         contentStr = contentStr + '@property (nonatomic) BOOL hard_code;\n';
@@ -54,13 +55,46 @@ def createTranslationClass4hFile(className, superClassName, desStr) :
     return contentStr;
 
 # 根据类名以及内容创建m文件的字符串内容
+def createFatherPublicMethod():
+    resultStr = '- (BOOL)update:(NSString *)contents {' + '\n';
+    resultStr = resultStr + '\tif (contents.length <= 0) { return NO; }' + '\n';
+    resultStr = resultStr + '\tNSMutableDictionary<NSString *, NSString *> *map = [NSMutableDictionary new];' + '\n';
+    resultStr = resultStr + '\tTFChecker *checker = [TFChecker new];' + '\n';
+    resultStr = resultStr + '\tTFParser *parser = [TFParser new];' + '\n';
+    resultStr = resultStr + '\t__block BOOL pass = YES;' + '\n';
+    resultStr = resultStr + '\t[checker itfCheck:contents' + '\n';
+    resultStr = resultStr + '\t\tcallback:^(NSUInteger lineNumber, NSString *line, TFCheckResult result) {' + '\n';
+    resultStr = resultStr + '\t\t\tswitch (result) {' + '\n';
+    resultStr = resultStr + '\t\t\t\tcase kTFCheckResultFail:' + '\n';
+    resultStr = resultStr + '\t\t\t\tcase kTFCheckResultParamterError: { pass = NO; }' + '\n';
+    resultStr = resultStr + '\t\t\t\tcase kTFCheckResultUseless: { break; }' + '\n';
+    resultStr = resultStr + '\t\t\t\tcase kTFCheckResultPass: {' + '\n';
+    resultStr = resultStr + '\t\t\t\t\t[parser itfParse:line' + '\n';
+    resultStr = resultStr + '\t\t\t\t\t\tresult:^(NSString * _Nonnull var, NSString * _Nullable ori, NSString * _Nonnull trans) {' + '\n';
+    resultStr = resultStr + '\t\t\t\t\t\t\tif (var) { map[var] = trans; }' + '\n';
+    resultStr = resultStr + '\t\t\t\t\t\t}];' + '\n';
+    resultStr = resultStr + '\t\t\t\t\tbreak;' + '\n';
+    resultStr = resultStr + '\t\t\t\t}' + '\n';
+    resultStr = resultStr + '\t\t\t}' + '\n';
+    resultStr = resultStr + '\t\t\treturn pass;' + '\n';
+    resultStr = resultStr + '\t\t}];' + '\n';
+    resultStr = resultStr + '\tif (pass) { _map = map.copy; }' + '\n';
+    resultStr = resultStr + '\treturn pass;' + '\n';
+    resultStr = resultStr + '}' + '\n';
+    return resultStr;
+
 def createTranslationClass4mFile(className, desStr) : 
     if (None == className) or (len(className) <= 0):
         print('类名字符串是空的');
         return None;
     contentStr = normalStr(className);
     contentStr = contentStr + '\n#import \"'+ className +'.h\"\n';
+    if (cmp(className, superClassName) == 0):
+        contentStr = contentStr + '# import \"TFChecker.h\"\n'
+        contentStr = contentStr + '# import \"TFParser.h\"\n'
     contentStr = contentStr + '@implementation ' + className + '\n';
+    if (cmp(className, superClassName) == 0):
+        contentStr = contentStr + createFatherPublicMethod();
     if desStr == None :
         desStr = '';
     contentStr = contentStr + desStr;
@@ -109,7 +143,7 @@ def argparseCreate():
     return args;
 
 rootPath = os.getcwd();
-##警告：测试代码
+# ##警告：测试代码
 # cList = ['CKLocalizable', 'CKLocalizable_english'];#'CKLocalizable', 'CKLocalizable_english'
 # args = [cList, 'MCTranslation'];
 # chilFileNameList = args[0];
