@@ -109,30 +109,37 @@ def argparseCreate():
     return args;
 
 rootPath = os.getcwd();
-# cList = ['CKLocalizable', 'CKLocalizable_english'];
+##警告：测试代码
+# cList = ['tempLocalizable'];#'CKLocalizable', 'CKLocalizable_english'
 # args = [cList, 'MCTranslation'];
 # chilFileNameList = args[0];
 # superClassName = args[1];
+
 args = argparseCreate();
 chilFileNameList = args.chilFileNameList;
 superClassName = args.superClassName;
+
 superFileHPath = rootPath + '/' + superClassName + '.h';
 superFileMPath = rootPath + '/' + superClassName + '.m';
-
 # 如果文件不存在先创建 避免下面的操作错误
 isExistSuperHFile = os.path.exists(superFileHPath);
 isExistSuperMFile = os.path.exists(superFileMPath);
-if isExistSuperHFile == False :
-    contentStr = createTranslationClass4hFile(superClassName, 'NSObject', '');
-    tempFile = open(superFileHPath, 'wr');
-    tempFile.write(contentStr);
-    tempFile.close();
 
-if False == isExistSuperMFile :
-    contentStr = createTranslationClass4mFile(superClassName, '');
-    tempFile = open(superFileMPath, 'wr');
-    tempFile.write(contentStr);
-    tempFile.close();
+if isExistSuperHFile == True :
+    os.remove(superFileHPath)
+
+if True == isExistSuperMFile :
+    os.remove(superFileMPath)
+
+contentStr = createTranslationClass4hFile(superClassName, 'NSObject', '');
+tempFile = open(superFileHPath, 'wr');
+tempFile.write(contentStr);
+tempFile.close();
+
+contentStr = createTranslationClass4mFile(superClassName, '');
+tempFile = open(superFileMPath, 'wr');
+tempFile.write(contentStr);
+tempFile.close();
 
 superFileH = open(superFileHPath);
 superFileM = open(superFileMPath);
@@ -157,7 +164,6 @@ for childFileName in chilFileNameList :
     willWriteStr = '';
     for cItemLine in cFileLines:
         itemAttr = parserFileStr(cItemLine);
-        print('parser data list count is: '+str(itemAttr.count)+'\tThis content is : ', itemAttr);
         if (itemAttr != None) :
             # 第一个参数为属性名
             attrName = itemAttr[0];
@@ -166,6 +172,18 @@ for childFileName in chilFileNameList :
             # 第三个参数为value
             valueName = itemAttr[2];
 
+            # 子类操作 .h文件不用写 只写.m文件
+            
+            cWriteStr = '\t_TFTranslationsImplement('+ attrName +', @\"'+ valueName +'\")\n';
+            searchStr = '\t_TFTranslationsImplement('+ attrName +', @\"';
+            cPos = willWriteStr.find(searchStr);
+            if (cPos < 0):
+                willWriteStr = willWriteStr + cWriteStr;
+            else:
+                subSearchStr = '\")\n';
+                tempPos = willWriteStr.find(subSearchStr, cPos, len(willWriteStr));
+                oldStr = willWriteStr[cPos:(tempPos + len(subSearchStr))];
+                willWriteStr = willWriteStr.replace(oldStr, cWriteStr);
             # 操作父类文件
             matchPos = matchStr4File(attrName, superFileH);
             if (None == matchPos) or (matchPos.count != 2):
@@ -173,6 +191,7 @@ for childFileName in chilFileNameList :
                 isHadTheAttr_H = False;
                 if (resultInsertContentStr_H.find(attrName)) > 0:
                     isHadTheAttr_H = True;
+                    continue;
                 # //头文件插入属性
                 hNum = superHLinesNum;
                 # /** 原文:更新提示 译文:======>更新提示 */
@@ -183,20 +202,17 @@ for childFileName in chilFileNameList :
                 mNum = superMLinesNum;
                 insertStr = '\n\t_TFTranslationsImplement('+ attrName +', @\"'+ keyName +'\")\n';
                 resultInsertContentStr_M = resultInsertContentStr_M + insertStr;
-            
-            # 子类操作 .h文件不用写 只写.m文件
-            cWriteStr = '\t_TFTranslationsImplement('+ attrName +', @\"'+ valueName +'\")\n';
-            willWriteStr = willWriteStr + cWriteStr;
-        hStr = createTranslationClass4hFile(childFileName, superClassName, '');
-        mStr = createTranslationClass4mFile(childFileName, willWriteStr);
-        hFilePath = rootPath + '/' + childFileName + '.h';
-        mFilePath = rootPath + '/' + childFileName + '.m';
-        hFile = open(hFilePath, 'wr');
-        mFile = open(mFilePath, 'wr');
-        hFile.write(hStr);
-        mFile.write(mStr);
-        hFile.close();
-        mFile.close();
+
+    hStr = createTranslationClass4hFile(childFileName, superClassName, '');
+    mStr = createTranslationClass4mFile(childFileName, willWriteStr);
+    hFilePath = rootPath + '/' + childFileName + '.h';
+    mFilePath = rootPath + '/' + childFileName + '.m';
+    hFile = open(hFilePath, 'wr');
+    mFile = open(mFilePath, 'wr');
+    hFile.write(hStr);
+    mFile.write(mStr);
+    hFile.close();
+    mFile.close();
 
 hContentStr = '';
 mContentStr = '';
