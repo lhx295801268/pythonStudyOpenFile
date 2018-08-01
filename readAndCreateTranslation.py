@@ -42,7 +42,7 @@ def createTranslationClass4hFile(className, superClassName, desStr) :
         contentStr = contentStr + '#import \"'+ superClassName +'.h\"\n'
     else:
         contentStr = contentStr + '#define _TFTranslationsImplement(v, hc) - (NSString *)v { if (self.hard_code || !self.map[@#v]) { return hc; } return self.map[@#v]; }\n';
-    contentStr = contentStr + '@interface MCTranslation : '+ superClassName +'\n';
+    contentStr = contentStr + '@interface '+ className +' : '+ superClassName +'\n';
     if (cmp(superClassName, 'NSObject') == 0) :
         contentStr = contentStr + '@property (nonatomic, strong) NSDictionary<NSString *, NSString *> *map;\n';
         contentStr = contentStr + '/** 是否使用硬编码代码 */\n';
@@ -110,7 +110,7 @@ def argparseCreate():
 
 rootPath = os.getcwd();
 ##警告：测试代码
-# cList = ['tempLocalizable'];#'CKLocalizable', 'CKLocalizable_english'
+# cList = ['CKLocalizable', 'CKLocalizable_english'];#'CKLocalizable', 'CKLocalizable_english'
 # args = [cList, 'MCTranslation'];
 # chilFileNameList = args[0];
 # superClassName = args[1];
@@ -130,6 +130,17 @@ if isExistSuperHFile == True :
 
 if True == isExistSuperMFile :
     os.remove(superFileMPath)
+
+#遍历删除子类文件
+for childClassName in chilFileNameList:
+    hfile = rootPath + '/' + childClassName + '.h';
+    mfile = rootPath + '/' + childClassName + '.m';
+    isExistHFile = os.path.exists(hfile);
+    isExistMFile = os.path.exists(mfile);
+    if isExistHFile == True:
+        os.remove(hfile);
+    if (isExistMFile == True):
+        os.remove(mfile);
 
 contentStr = createTranslationClass4hFile(superClassName, 'NSObject', '');
 tempFile = open(superFileHPath, 'wr');
