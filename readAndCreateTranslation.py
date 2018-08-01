@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import os,sys,filecmp,argparse,re,getopt,time
 
 # 从文件流中查找是否有这个字符串 有返回一个数组第一个为哪一行 第二个为这个字符串第一次出现的位置 
@@ -101,13 +103,12 @@ def parserFileStr(itemLine) :
 
 def argparseCreate():
     tempParse = argparse.ArgumentParser();
-    tempParse.add_argument('--a', action='append', dest='chilFileNameList', default=[],help='enter child File Name List');
-    tempParse.add_argument('--s', dest='superClassName', default='MCTranslation', help='param is super file and class name');
+    tempParse.add_argument('-a', action='append', dest='chilFileNameList', default=[],help='enter child File Name List');
+    tempParse.add_argument('-s', dest='superClassName', default='MCTranslation', help='param is super file and class name');
     args = tempParse.parse_args();
     return args;
 
 rootPath = os.getcwd();
-# #warning test code
 # cList = ['CKLocalizable', 'CKLocalizable_english'];
 # args = [cList, 'MCTranslation'];
 # chilFileNameList = args[0];
@@ -115,7 +116,6 @@ rootPath = os.getcwd();
 args = argparseCreate();
 chilFileNameList = args.chilFileNameList;
 superClassName = args.superClassName;
-
 superFileHPath = rootPath + '/' + superClassName + '.h';
 superFileMPath = rootPath + '/' + superClassName + '.m';
 
@@ -142,12 +142,10 @@ superFileM.close();
 superFileH = open(superFileHPath);
 superFileM = open(superFileMPath);
 superHLinesNum = 0;
-for tempLine in superFileH :
-    # print('=====>'+ tempLine +'<=====')
+for tempLine in superFileH.readline() :
     superHLinesNum = superHLinesNum + 1;
 superMLinesNum = 0;
-for tempLine in superFileM :
-    # print('=====>'+ tempLine +'<=====')
+for tempLine in superFileM.readline() :
     superMLinesNum = superMLinesNum + 1;
 resultInsertContentStr_H = '';
 resultInsertContentStr_M = '';
@@ -211,11 +209,10 @@ for itemLine in superFileH:
         hContentStr = hContentStr + resultInsertContentStr_H;
         hContentStr = hContentStr + itemLine;
     else:
-        hContentStr = hContentStr + itemLine;
-        # tempPos = itemLine.find('/** 原文:');
-        # tempPos2 = itemLine.find('@property (nonatomic, strong, readonly) NSString *');
-        # if(tempPos == 0) or (tempPos2 == 0) :
-        #     hContentStr = hContentStr + itemLine;
+        tempPos = itemLine.find('/** 原文:');
+        tempPos2 = itemLine.find('@property (nonatomic, strong, readonly) NSString *');
+        if(tempPos == 0) or (tempPos2 == 0) :
+            hContentStr = hContentStr + itemLine;
 
 for itemLine in superFileM:
     if (itemLine.find('@end') >= 0):
