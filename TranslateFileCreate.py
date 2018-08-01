@@ -1,5 +1,5 @@
 import argparse, os, filecmp, sys, re, getopt, time
-
+#coding:utf-8
 # 读取文件
 def readFile(filePath):
     fileIsExist = os.path.exists(filePath);
@@ -47,7 +47,7 @@ def createHFileStr(contentList):
     resultStr = resultStr + '#import <Foundation/Foundation.h>\n';
     resultStr = resultStr + '@interface ' + fileName + ' : NSObject {\n';
     resultStr = resultStr + '\t@protected\n' + '\t/** 动态更新文本map */\n' + '\tNSDictionary<NSString *, NSString *> *_map;\n}\n';
-    resultStr = resultStr + '\t/** 是否使用硬编码代码 */\n' + '\t@property (nonatomic) BOOL hard_code;\n\n'; 
+    resultStr = resultStr + '\t/** 是否使用硬编码代码 */\n' + '\t@property (nonatomic) BOOL hard_code;\n\n'# + '@property (nonatomic, assign, readonly) MCLanguageType *curLanguageTaype;\n\n'; 
 
     for itemList in contentList :
         # print('======>'+itemList[0]+'\t======>'+itemList[1]+'\t======>'+itemList[2]);
